@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pomodoro Timer</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&display=swap');
+
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: black;
+            font-family: 'DM Sans', sans-serif;
+            color: white;
+        }
+
+        .timer-container {
+            text-align: center;
+            background: transparent;
+            padding: 20px;
+            width: auto;
+        }
+
+        .session-counter {
+            font-size: 2rem;
+            margin-bottom: 15px;
+            color: white;
+        }
+
+        .break-title {
+            font-size: 1.5rem;
+            color: white;
+            margin-bottom: 10px;
+            display: none; /* Hidden by default */
+        }
+
+        h1 {
+            font-size: 4rem;
+            margin: 0;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 500;
+            color: white;
+            transition: all 0.5s ease;
+        }
+
+        h1.break-time {
+            animation: rgb-cycle 3s infinite; /* Smooth RGB cycle animation */
+        }
+
+        @keyframes rgb-cycle {
+            0% {
+                color: rgb(255, 99, 132); /* Red */
+            }
+            33% {
+                color: rgb(54, 162, 235); /* Blue */
+            }
+            66% {
+                color: rgb(75, 192, 192); /* Green */
+            }
+            100% {
+                color: rgb(255, 99, 132); /* Back to Red */
+            }
+        }
+
+        .controls {
+            margin-top: 30px; /* Increased margin to add space between the timer and the buttons */
+        }
+
+        button {
+            margin: 5px;
+            padding: 10px 20px;
+            border: 2px solid white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            font-family: 'DM Sans', sans-serif;
+            background-color: transparent;
+            color: white;
+        }
+
+        button:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        input {
+            margin: 5px;
+            padding: 8px;
+            border: 2px solid white;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1rem;
+            background: transparent;
+            color: white;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Ignore clicks */
+            z-index: 1000; /* Ensure it's above everything */
+        }
+    </style>
+</head>
+<body>
+    <div class="timer-container">
+        <div id="breakTitle" class="break-title">Break Time</div>
+        <div class="session-counter" id="sessionCounter">Session: 1/8</div>
+        <h1 id="timer">25:00</h1>
+
+        <div id="controlButtons" class="controls">
+            <button class="start" id="startButton">Start</button>
+            <button class="pause hidden" id="pauseButton">Pause</button>
+            <button class="reset" id="resetButton">Reset</button>
+        </div>
+
+        <div id="configPanel" class="controls">
+            <input id="workTime" type="number" placeholder="Work (mins)" value="25" min="1">
+            <input id="breakTime" type="number" placeholder="Break (mins)" value="5" min="1">
+            <input id="totalSessions" type="number" placeholder="Sessions" value="8" min="1">
+        </div>
+    </div>
+
+    <canvas id="confettiCanvas"></canvas>
+
+    <script>
+        const timerElement = document.getElementById("timer");
+        const sessionCounter = document.getElementById("sessionCounter");
+        const breakTitle = document.getElementById("breakTitle");
+        const workTimeInput = document.getElementById("workTime");
+        const breakTimeInput = document.getElementById("breakTime");
+        const totalSessionsInput = document.getElementById("totalSessions");
+        const startButton = document.getElementById("startButton");
+        const pauseButton = document.getElementById("pauseButton");
+        const resetButton = document.getElementById("resetButton");
+        const configPanel = document.getElementById("configPanel");
+        const confettiCanvas = document.getElementById("confettiCanvas");
+
+        let timer;
+        let isRunning = false;
+        let isWorkSession = true;
+        let timeLeft = 25 * 60;
+        let sessionCount = 1;
+        let totalSessions = 8;
+
+        const confettiContext = confettiCanvas.getContext("2d");
+        const confettiPieces = [];
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60).toString().padStart(2, "0");
+            const seconds = (timeLeft % 60).toString().padStart(2, "0");
+            timerElement.textContent = `${minutes}:${seconds}`;
+        }
+
+        function toggleBreakIndicator() {
+            if (isWorkSession) {
+                breakTitle.style.display = 'none'; // Hide Break Time title
+                timerElement.classList.remove("break-time");
+            } else {
+                breakTitle.style.display = 'block'; // Show Break Time title
+                timerElement.classList.add("break-time");
+            }
+        }
+
+        function createConfetti() {
+            for (let i = 0; i < 300; i++) {
+                confettiPieces.push({
+                    x: Math.random() * confettiCanvas.width,
+                    y: Math.random() * confettiCanvas.height,
+                    r: Math.random() * 4 + 1,
+                    dx: Math.random() - 0.5,
+                    dy: Math.random() * 4 + 1,
+                    color: `hsl(${Math.random() * 360}, 100%, 50%)`
+                });
+            }
+        }
+
+        function drawConfetti() {
+            confettiContext.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+
+            confettiPieces.forEach((piece, index) => {
+                confettiContext.beginPath();
+                confettiContext.arc(piece.x, piece.y, piece.r, 0, Math.PI * 2);
+                confettiContext.fillStyle = piece.color;
+                confettiContext.fill();
+
+                piece.x += piece.dx;
+                piece.y += piece.dy;
+
+                if (piece.y > confettiCanvas.height) {
+                    confettiPieces.splice(index, 1);
+                }
+            });
+
+            requestAnimationFrame(drawConfetti);
+        }
+
+        function startConfetti() {
+            confettiCanvas.width = window.innerWidth;
+            confettiCanvas.height = window.innerHeight;
+
+            createConfetti();
+            drawConfetti();
+        }
+
+        function startTimer() {
+            if (isRunning) return;
+
+            startButton.classList.add("hidden");
+            pauseButton.classList.remove("hidden");
+
+            isRunning = true;
+            timer = setInterval(() => {
+                timeLeft--;
+                if (timeLeft < 0) {
+                    clearInterval(timer);
+                    isRunning = false;
+
+                    if (isWorkSession) {
+                        timeLeft = parseInt(breakTimeInput.value) * 60;
+                        isWorkSession = false;
+                        toggleBreakIndicator();
+                        startConfetti();
+                    } else {
+                        timeLeft = parseInt(workTimeInput.value) * 60;
+                        isWorkSession = true;
+                        sessionCount++;
+                        if (sessionCount > totalSessions) {
+                            sessionCount = totalSessions;
+                            resetTimer();
+                            return;
+                        }
+                        toggleBreakIndicator();
+                    }
+
+                    sessionCounter.textContent = `Session: ${sessionCount}/${totalSessions}`;
+                    startTimer();
+                }
+                updateTimerDisplay();
+            }, 1000);
+
+            toggleBreakIndicator();
+        }
+
+        function pauseTimer() {
+            clearInterval(timer);
+            isRunning = false;
+
+            startButton.classList.remove("hidden");
+            pauseButton.classList.add("hidden");
+        }
+
+        function resetTimer() {
+            clearInterval(timer);
+            isRunning = false;
+            isWorkSession = true;
+            sessionCount = 1;
+            timeLeft = parseInt(workTimeInput.value) * 60;
+
+            sessionCounter.textContent = `Session: ${sessionCount}/${totalSessions}`;
+            startButton.classList.remove("hidden");
+            pauseButton.classList.add("hidden");
+
+            toggleBreakIndicator();
+            updateTimerDisplay();
+        }
+
+        startButton.addEventListener("click", startTimer);
+        pauseButton.addEventListener("click", pauseTimer);
+        resetButton.addEventListener("click", resetTimer);
+
+        updateTimerDisplay();
+    </script>
+</body>
+</html>
