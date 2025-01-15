@@ -24,6 +24,10 @@
             background: transparent;
             padding: 20px;
             width: auto;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         .session-counter {
@@ -36,7 +40,15 @@
             font-size: 1.5rem;
             color: white;
             margin-bottom: 10px;
-            display: none; /* Hidden by default */
+            visibility: hidden;
+            height: 1.5rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .break-title.visible {
+            visibility: visible;
+            opacity: 1;
         }
 
         h1 {
@@ -49,26 +61,26 @@
         }
 
         h1.break-time {
-            animation: rgb-cycle 3s infinite; /* Smooth RGB cycle animation */
+            animation: rgb-cycle 3s infinite;
         }
 
         @keyframes rgb-cycle {
             0% {
-                color: rgb(255, 99, 132); /* Red */
+                color: rgb(255, 99, 132);
             }
             33% {
-                color: rgb(54, 162, 235); /* Blue */
+                color: rgb(54, 162, 235);
             }
             66% {
-                color: rgb(75, 192, 192); /* Green */
+                color: rgb(75, 192, 192);
             }
             100% {
-                color: rgb(255, 99, 132); /* Back to Red */
+                color: rgb(255, 99, 132);
             }
         }
 
         .controls {
-            margin-top: 30px; /* Increased margin to add space between the timer and the buttons */
+            margin-top: 30px;
         }
 
         button {
@@ -114,8 +126,8 @@
             left: 0;
             width: 100%;
             height: 100%;
-            pointer-events: none; /* Ignore clicks */
-            z-index: 1000; /* Ensure it's above everything */
+            pointer-events: none;
+            z-index: 1000;
         }
     </style>
 </head>
@@ -169,12 +181,13 @@
             timerElement.textContent = `${minutes}:${seconds}`;
         }
 
+        // Update the toggleBreakIndicator function
         function toggleBreakIndicator() {
             if (isWorkSession) {
-                breakTitle.style.display = 'none'; // Hide Break Time title
+                breakTitle.classList.remove('visible');
                 timerElement.classList.remove("break-time");
             } else {
-                breakTitle.style.display = 'block'; // Show Break Time title
+                breakTitle.classList.add('visible');
                 timerElement.classList.add("break-time");
             }
         }
