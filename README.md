@@ -19,7 +19,7 @@ A minimalist, customizable Pomodoro timer designed specifically for OBS (Open Br
 1. **Adding the Timer to OBS:**
    - In OBS, add a new "Browser" source to your scene
    - Check the "Local file" checkbox
-   - Click "Browse" and select the `index.html` file
+   - Click "Browse" and select the `pomo.html` file
    - Set the width to 800 and height to 600 (adjust as needed)
    - Make sure "Shutdown source when not visible" is unchecked
 
