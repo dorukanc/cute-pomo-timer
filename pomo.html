@@ -300,6 +300,31 @@
         resetButton.addEventListener("click", resetTimer);
 
         updateTimerDisplay();
+
+        // Listen for changes to the totalSessionsInput field and update the totalSessions variable
+        totalSessionsInput.addEventListener("input", () => {
+            totalSessions = parseInt(totalSessionsInput.value) || 1; // Fallback to 1 if the input is invalid
+            sessionCounter.textContent = `Session: ${sessionCount}/${totalSessions}`;
+        });
+
+        function resetTimer() {
+            clearInterval(timer);
+            isRunning = false;
+            isWorkSession = true;
+            sessionCount = 1;
+            timeLeft = parseInt(workTimeInput.value) * 60;
+
+            // Ensure the session counter displays the correct total sessions
+            totalSessions = parseInt(totalSessionsInput.value) || 1;
+            sessionCounter.textContent = `Session: ${sessionCount}/${totalSessions}`;
+            startButton.classList.remove("hidden");
+            pauseButton.classList.add("hidden");
+
+            toggleBreakIndicator();
+            updateTimerDisplay();
+        }
+
+
     </script>
 </body>
 </html>
