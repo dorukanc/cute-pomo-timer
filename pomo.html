@@ -129,10 +129,16 @@
             pointer-events: none;
             z-index: 1000;
         }
+
+        #alarmSound {
+            display: none;
+            position: fixed;
+        }
     </style>
 </head>
 <body>
     <div class="timer-container">
+        <audio id="alarmSound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg"></audio>
         <div id="breakTitle" class="break-title">Break Time</div>
         <div class="session-counter" id="sessionCounter">Session: 1/8</div>
         <h1 id="timer">25:00</h1>
@@ -164,6 +170,7 @@
         const resetButton = document.getElementById("resetButton");
         const configPanel = document.getElementById("configPanel");
         const confettiCanvas = document.getElementById("confettiCanvas");
+        const alarmSound = document.getElementById('alarmSound');
 
         let timer;
         let isRunning = false;
@@ -246,22 +253,22 @@
                     clearInterval(timer);
                     isRunning = false;
 
+                    playAlarm();
                     if (isWorkSession) {
                         timeLeft = parseInt(breakTimeInput.value) * 60;
                         isWorkSession = false;
                         toggleBreakIndicator();
                         startConfetti();
                     } else {
-                        timeLeft = parseInt(workTimeInput.value) * 60;
-                        isWorkSession = true;
+            timeLeft = parseInt(workTimeInput.value) * 60;
+            isWorkSession = true;
                         sessionCount++;
                         if (sessionCount > totalSessions) {
-                            sessionCount = totalSessions;
                             resetTimer();
                             return;
                         }
-                        toggleBreakIndicator();
-                    }
+            toggleBreakIndicator();
+        }
 
                     sessionCounter.textContent = `Session: ${sessionCount}/${totalSessions}`;
                     startTimer();
@@ -271,6 +278,15 @@
 
             toggleBreakIndicator();
         }
+
+        function playAlarm() {
+            alarmSound.play();
+        }
+
+        // Add event listener for when audio finishes playing
+        alarmSound.addEventListener('ended', () => {
+            alarmSound.currentTime = 0; // Reset to beginning
+        });
 
         function pauseTimer() {
             clearInterval(timer);
@@ -287,6 +303,8 @@
             sessionCount = 1;
             timeLeft = parseInt(workTimeInput.value) * 60;
 
+            // Ensure the session counter displays the correct total sessions
+            totalSessions = parseInt(totalSessionsInput.value) || 1;
             sessionCounter.textContent = `Session: ${sessionCount}/${totalSessions}`;
             startButton.classList.remove("hidden");
             pauseButton.classList.add("hidden");
@@ -306,25 +324,6 @@
             totalSessions = parseInt(totalSessionsInput.value) || 1; // Fallback to 1 if the input is invalid
             sessionCounter.textContent = `Session: ${sessionCount}/${totalSessions}`;
         });
-
-        function resetTimer() {
-            clearInterval(timer);
-            isRunning = false;
-            isWorkSession = true;
-            sessionCount = 1;
-            timeLeft = parseInt(workTimeInput.value) * 60;
-
-            // Ensure the session counter displays the correct total sessions
-            totalSessions = parseInt(totalSessionsInput.value) || 1;
-            sessionCounter.textContent = `Session: ${sessionCount}/${totalSessions}`;
-            startButton.classList.remove("hidden");
-            pauseButton.classList.add("hidden");
-
-            toggleBreakIndicator();
-            updateTimerDisplay();
-        }
-
-
     </script>
 </body>
 </html>
